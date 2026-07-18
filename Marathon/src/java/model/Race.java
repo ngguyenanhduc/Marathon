@@ -150,4 +150,9 @@ public class Race {
     public void setRegistrationCount(int registrationCount) {
         this.registrationCount = registrationCount;
     }
+    
+        public boolean isEditable() {
+        return "PENDING".equalsIgnoreCase(status)
+                || "REJECTED".equalsIgnoreCase(status);
+    }
 }

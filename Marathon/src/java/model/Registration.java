@@ -8,6 +8,7 @@ public class Registration {
     private int runnerId;
     private String runnerName;
     private String runnerEmail;
+    private String runnerPhone;
     private int distanceId;
     private String distanceName;
     private int raceId;
@@ -21,6 +22,18 @@ public class Registration {
     private LocalTime finishTime;
     private String resultStatus;
     private Integer ranking;
+
+    public String getRunnerPhone() {
+        return runnerPhone;
+    }
+
+    public void setRunnerPhone(String runnerPhone) {
+        this.runnerPhone = runnerPhone;
+    }
+
+    public Registration(String runnerPhone) {
+        this.runnerPhone = runnerPhone;
+    }
 
     public Registration() {
     }

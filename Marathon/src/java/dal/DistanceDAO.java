@@ -15,6 +15,131 @@ import model.DistanceKM;
 
 public class DistanceDAO extends DBContext {
 
+    //cac method Public Distance do PhucNTHE173021 bo sung
+
+    //lay cac cu ly thuoc mot giai da duoc cong khai
+    public List<DistanceKM> getPublicDistancesByRace(int raceId) {
+        List<DistanceKM> distances = new ArrayList<>();
+
+        String sql = """
+            SELECT
+                d.distanceId,
+                d.raceId,
+                r.raceName,
+                r.status AS raceStatus,
+                d.distanceName,
+                d.distanceKm,
+                d.registrationFee,
+                d.maxParticipant,
+                SUM(CASE WHEN reg.status = 'APPROVED' THEN 1 ELSE 0 END)
+                    AS approvedRegistrationCount,
+                SUM(CASE WHEN reg.status = 'PENDING' THEN 1 ELSE 0 END)
+                    AS pendingRegistrationCount
+            FROM DistanceKM d
+            JOIN Race r
+                ON d.raceId = r.raceId
+            LEFT JOIN Registration reg
+                ON d.distanceId = reg.distanceId
+            WHERE d.raceId = ?
+              AND r.status NOT IN ('PENDING', 'REJECTED')
+            GROUP BY
+                d.distanceId,
+                d.raceId,
+                r.raceName,
+                r.status,
+                d.distanceName,
+                d.distanceKm,
+                d.registrationFee,
+                d.maxParticipant
+            ORDER BY d.distanceKm ASC
+            """;
+
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, raceId);
+
+            try (ResultSet resultSet = statement.executeQuery()) {
+                while (resultSet.next()) {
+                    distances.add(mapPublicDistance(resultSet));
+                }
+            }
+        } catch (SQLException exception) {
+            throw new RuntimeException(
+                    "Khong the lay danh sach cu ly cong khai.", exception);
+        }
+
+        return distances;
+    }
+
+    //lay mot cu ly cong khai de kiem tra truoc khi Runner dang ky
+    public DistanceKM getPublicDistanceById(int distanceId) {
+        String sql = """
+            SELECT
+                d.distanceId,
+                d.raceId,
+                r.raceName,
+                r.status AS raceStatus,
+                d.distanceName,
+                d.distanceKm,
+                d.registrationFee,
+                d.maxParticipant,
+                SUM(CASE WHEN reg.status = 'APPROVED' THEN 1 ELSE 0 END)
+                    AS approvedRegistrationCount,
+                SUM(CASE WHEN reg.status = 'PENDING' THEN 1 ELSE 0 END)
+                    AS pendingRegistrationCount
+            FROM DistanceKM d
+            JOIN Race r
+                ON d.raceId = r.raceId
+            LEFT JOIN Registration reg
+                ON d.distanceId = reg.distanceId
+            WHERE d.distanceId = ?
+              AND r.status NOT IN ('PENDING', 'REJECTED')
+            GROUP BY
+                d.distanceId,
+                d.raceId,
+                r.raceName,
+                r.status,
+                d.distanceName,
+                d.distanceKm,
+                d.registrationFee,
+                d.maxParticipant
+            """;
+
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, distanceId);
+
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    return mapPublicDistance(resultSet);
+                }
+            }
+        } catch (SQLException exception) {
+            throw new RuntimeException(
+                    "Khong the lay thong tin cu ly cong khai.", exception);
+        }
+
+        return null;
+    }
+
+    //chuyen mot dong ResultSet thanh DistanceKM cho trang public
+    private DistanceKM mapPublicDistance(ResultSet resultSet)
+            throws SQLException {
+        DistanceKM distance = new DistanceKM();
+        distance.setDistanceId(resultSet.getInt("distanceId"));
+        distance.setRaceId(resultSet.getInt("raceId"));
+        distance.setRaceName(resultSet.getString("raceName"));
+        distance.setRaceStatus(resultSet.getString("raceStatus"));
+        distance.setDistanceName(resultSet.getString("distanceName"));
+        distance.setDistanceKm(resultSet.getBigDecimal("distanceKm"));
+        distance.setRegistrationFee(
+                resultSet.getBigDecimal("registrationFee"));
+        distance.setMaxParticipant(resultSet.getInt("maxParticipant"));
+        distance.setApprovedRegistrationCount(
+                resultSet.getInt("approvedRegistrationCount"));
+        distance.setPendingRegistrationCount(
+                resultSet.getInt("pendingRegistrationCount"));
+        return distance;
+    }
+
     public List<DistanceKM> getDistancesByRace(
             int raceId,
             int organizerId) {

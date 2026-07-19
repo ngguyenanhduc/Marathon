@@ -696,4 +696,180 @@ public class RegistrationDAO extends DBContext {
         }
     }
 }
+
+    //cac method Runner Registration do PhucNTHE173021 bo sung
+
+    //kiem tra Runner da tung dang ky cu ly hay chua
+    public boolean hasRegistration(int runnerId, int distanceId) {
+        String sql = """
+            SELECT 1
+            FROM Registration
+            WHERE runnerId = ?
+              AND distanceId = ?
+            """;
+
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, runnerId);
+            statement.setInt(2, distanceId);
+
+            try (ResultSet resultSet = statement.executeQuery()) {
+                return resultSet.next();
+            }
+        } catch (SQLException exception) {
+            throw new RuntimeException(
+                    "Khong the kiem tra dang ky trung.", exception);
+        }
+    }
+
+    //tao don PENDING va kiem tra lai cac dieu kien tai cau SQL
+    public boolean createRegistration(int runnerId, int distanceId) {
+        String sql = """
+            INSERT INTO Registration (
+                runnerId,
+                distanceId,
+                status,
+                registerDate
+            )
+            SELECT
+                ?,
+                d.distanceId,
+                'PENDING',
+                GETDATE()
+            FROM DistanceKM d
+            JOIN Race r
+                ON d.raceId = r.raceId
+            WHERE d.distanceId = ?
+              AND r.status IN ('APPROVED', 'OPEN')
+              AND GETDATE() <= r.registrationDeadline
+              AND GETDATE() < r.startDate
+              AND (
+                    SELECT COUNT(*)
+                    FROM Registration approvedRegistration
+                    WHERE approvedRegistration.distanceId = d.distanceId
+                      AND approvedRegistration.status = 'APPROVED'
+                  ) < d.maxParticipant
+              AND NOT EXISTS (
+                    SELECT 1
+                    FROM Registration currentRegistration
+                    WHERE currentRegistration.runnerId = ?
+                      AND currentRegistration.distanceId = d.distanceId
+                  )
+            """;
+
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, runnerId);
+            statement.setInt(2, distanceId);
+            statement.setInt(3, runnerId);
+            return statement.executeUpdate() > 0;
+        } catch (SQLException exception) {
+            //ma loi 2601 va 2627 cua SQL Server deu la vi pham unique
+            if (exception.getErrorCode() == 2601
+                    || exception.getErrorCode() == 2627) {
+                return false;
+            }
+
+            throw new RuntimeException(
+                    "Khong the tao don dang ky chay.", exception);
+        }
+    }
+
+    //lay toan bo don cua Runner de hien thi lich su dang ky
+    public List<Registration> getRegistrationsByRunner(int runnerId) {
+        List<Registration> registrations = new ArrayList<>();
+
+        String sql = """
+            SELECT
+                reg.registrationId,
+                reg.runnerId,
+                runner.fullName AS runnerName,
+                runner.email AS runnerEmail,
+                runner.phone AS runnerPhone,
+                reg.distanceId,
+                d.distanceName,
+                d.raceId,
+                r.raceName,
+                reg.approvedByUserId,
+                approver.fullName AS approverName,
+                reg.bibNumber,
+                reg.status,
+                reg.registerDate,
+                reg.approvedDate,
+                result.finishTime,
+                result.status AS resultStatus,
+                result.ranking
+            FROM Registration reg
+            JOIN Users runner
+                ON reg.runnerId = runner.userId
+            JOIN DistanceKM d
+                ON reg.distanceId = d.distanceId
+            JOIN Race r
+                ON d.raceId = r.raceId
+            LEFT JOIN Users approver
+                ON reg.approvedByUserId = approver.userId
+            LEFT JOIN RaceResult result
+                ON reg.registrationId = result.registrationId
+            WHERE reg.runnerId = ?
+            ORDER BY reg.registerDate DESC
+            """;
+
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, runnerId);
+
+            try (ResultSet resultSet = statement.executeQuery()) {
+                while (resultSet.next()) {
+                    registrations.add(mapRunnerRegistration(resultSet));
+                }
+            }
+        } catch (SQLException exception) {
+            throw new RuntimeException(
+                    "Khong the lay danh sach dang ky cua Runner.", exception);
+        }
+
+        return registrations;
+    }
+
+    //chuyen mot dong ResultSet thanh Registration cho trang Runner
+    private Registration mapRunnerRegistration(ResultSet resultSet)
+            throws SQLException {
+        Registration registration = new Registration();
+        registration.setRegistrationId(
+                resultSet.getInt("registrationId"));
+        registration.setRunnerId(resultSet.getInt("runnerId"));
+        registration.setRunnerName(resultSet.getString("runnerName"));
+        registration.setRunnerEmail(resultSet.getString("runnerEmail"));
+        registration.setRunnerPhone(resultSet.getString("runnerPhone"));
+        registration.setDistanceId(resultSet.getInt("distanceId"));
+        registration.setDistanceName(resultSet.getString("distanceName"));
+        registration.setRaceId(resultSet.getInt("raceId"));
+        registration.setRaceName(resultSet.getString("raceName"));
+
+        int approvedByUserId = resultSet.getInt("approvedByUserId");
+        registration.setApprovedByUserId(
+                resultSet.wasNull() ? null : approvedByUserId);
+        registration.setApproverName(resultSet.getString("approverName"));
+
+        int bibNumber = resultSet.getInt("bibNumber");
+        registration.setBibNumber(resultSet.wasNull() ? null : bibNumber);
+        registration.setStatus(resultSet.getString("status"));
+
+        Timestamp registerDate = resultSet.getTimestamp("registerDate");
+        if (registerDate != null) {
+            registration.setRegisterDate(registerDate.toLocalDateTime());
+        }
+
+        Timestamp approvedDate = resultSet.getTimestamp("approvedDate");
+        if (approvedDate != null) {
+            registration.setApprovedDate(approvedDate.toLocalDateTime());
+        }
+
+        java.sql.Time finishTime = resultSet.getTime("finishTime");
+        if (finishTime != null) {
+            registration.setFinishTime(finishTime.toLocalTime());
+        }
+
+        registration.setResultStatus(resultSet.getString("resultStatus"));
+        int ranking = resultSet.getInt("ranking");
+        registration.setRanking(resultSet.wasNull() ? null : ranking);
+        return registration;
+    }
 }

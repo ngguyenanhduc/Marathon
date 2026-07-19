@@ -5,6 +5,15 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import model.User;
 
+/**
+ * Author: PhucNTHE173021
+ *
+ * Version: 1
+ *
+ * Last Update Date: 17/7/2026
+ *
+ * Purpose: truy van tai khoan va cap nhat thong tin nguoi dung
+ */
 public class UserDAO extends DBContext {
 
     public User getUserByUsername(String username) {
@@ -89,6 +98,107 @@ public class UserDAO extends DBContext {
         }
 
         return null;
+    }
+
+    //cac method Auth va Runner do PhucNTHE173021 bo sung
+
+    //kiem tra username da duoc su dung hay chua
+    public boolean usernameExists(String username) {
+        String sql = "SELECT 1 FROM Users WHERE userName = ?";
+
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, username);
+
+            try (ResultSet resultSet = statement.executeQuery()) {
+                return resultSet.next();
+            }
+        } catch (SQLException exception) {
+            throw new RuntimeException(
+                    "Khong the kiem tra username.", exception);
+        }
+    }
+
+    //kiem tra email co thuoc mot tai khoan khac hay khong
+    public boolean emailExists(String email, Integer excludedUserId) {
+        String sql = """
+            SELECT 1
+            FROM Users
+            WHERE email = ?
+              AND (? IS NULL OR userId <> ?)
+            """;
+
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, email);
+
+            if (excludedUserId == null) {
+                statement.setNull(2, java.sql.Types.INTEGER);
+                statement.setNull(3, java.sql.Types.INTEGER);
+            } else {
+                statement.setInt(2, excludedUserId);
+                statement.setInt(3, excludedUserId);
+            }
+
+            try (ResultSet resultSet = statement.executeQuery()) {
+                return resultSet.next();
+            }
+        } catch (SQLException exception) {
+            throw new RuntimeException(
+                    "Khong the kiem tra email.", exception);
+        }
+    }
+
+    //tao tai khoan Runner sau khi servlet da validate du lieu
+    public boolean createRunner(User user, int runnerRoleId) {
+        String sql = """
+            INSERT INTO Users (
+                userName,
+                password,
+                roleId,
+                fullName,
+                email,
+                phone,
+                status,
+                createdAt
+            )
+            VALUES (?, ?, ?, ?, ?, ?, 'ACTIVE', GETDATE())
+            """;
+
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, user.getUserName());
+            statement.setString(2, user.getPassword());
+            statement.setInt(3, runnerRoleId);
+            statement.setString(4, user.getFullName());
+            statement.setString(5, user.getEmail());
+            statement.setString(6, user.getPhone());
+
+            return statement.executeUpdate() > 0;
+        } catch (SQLException exception) {
+            throw new RuntimeException(
+                    "Khong the tao tai khoan Runner.", exception);
+        }
+    }
+
+    //cap nhat ho ten, email va so dien thoai cua Runner
+    public boolean updateProfile(User user) {
+        String sql = """
+            UPDATE Users
+            SET fullName = ?,
+                email = ?,
+                phone = ?
+            WHERE userId = ?
+            """;
+
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, user.getFullName());
+            statement.setString(2, user.getEmail());
+            statement.setString(3, user.getPhone());
+            statement.setInt(4, user.getUserId());
+
+            return statement.executeUpdate() > 0;
+        } catch (SQLException exception) {
+            throw new RuntimeException(
+                    "Khong the cap nhat ho so Runner.", exception);
+        }
     }
 
     private User mapUser(ResultSet resultSet)

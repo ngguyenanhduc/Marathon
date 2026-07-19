@@ -90,7 +90,7 @@ CREATE TABLE Race (
         CHECK (endDate >= startDate),
 
     CONSTRAINT CK_Race_RegistrationDeadline
-        CHECK (registrationDeadline <= startDate)
+        CHECK (registrationDeadline <= endDate)
 );
 
 

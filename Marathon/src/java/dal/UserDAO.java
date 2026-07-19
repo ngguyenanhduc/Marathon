@@ -3,6 +3,8 @@ package dal;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 import model.User;
 
 /**
@@ -198,6 +200,88 @@ public class UserDAO extends DBContext {
         } catch (SQLException exception) {
             throw new RuntimeException(
                     "Khong the cap nhat ho so Runner.", exception);
+        }
+    }
+
+    //cac method Admin do anhdu bo sung
+
+    //lay danh sach user cho trang quan tri Admin
+    public List<User> getUsersForAdmin(String keyword,
+            String roleName,
+            String status) {
+        List<User> users = new ArrayList<>();
+        String searchValue = keyword == null ? "" : keyword.trim();
+        String roleValue = roleName == null ? "" : roleName.trim();
+        String statusValue = status == null ? "" : status.trim();
+        String likeValue = "%" + searchValue + "%";
+
+        String sql = """
+            SELECT
+                u.userId,
+                u.userName,
+                u.password,
+                u.roleId,
+                r.roleName,
+                u.fullName,
+                u.email,
+                u.phone,
+                u.status,
+                u.createdAt
+            FROM Users u
+            JOIN Roles r
+                ON u.roleId = r.roleId
+            WHERE (? = ''
+                   OR u.userName LIKE ?
+                   OR u.fullName LIKE ?
+                   OR u.email LIKE ?)
+              AND (? = '' OR r.roleName = ?)
+              AND (? = '' OR u.status = ?)
+            ORDER BY
+                r.roleName ASC,
+                u.createdAt DESC,
+                u.userId DESC
+            """;
+
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, searchValue);
+            statement.setString(2, likeValue);
+            statement.setString(3, likeValue);
+            statement.setString(4, likeValue);
+            statement.setString(5, roleValue);
+            statement.setString(6, roleValue);
+            statement.setString(7, statusValue);
+            statement.setString(8, statusValue);
+
+            try (ResultSet resultSet = statement.executeQuery()) {
+                while (resultSet.next()) {
+                    users.add(mapUser(resultSet));
+                }
+            }
+        } catch (SQLException exception) {
+            throw new RuntimeException(
+                    "Khong the lay danh sach user cho Admin.", exception);
+        }
+
+        return users;
+    }
+
+    //cap nhat trang thai user theo cac gia tri hop le cua database
+    public boolean updateUserStatus(int userId, String status) {
+        String sql = """
+            UPDATE Users
+            SET status = ?
+            WHERE userId = ?
+              AND ? IN ('ACTIVE', 'INACTIVE', 'BANNED')
+            """;
+
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, status);
+            statement.setInt(2, userId);
+            statement.setString(3, status);
+            return statement.executeUpdate() > 0;
+        } catch (SQLException exception) {
+            throw new RuntimeException(
+                    "Khong the cap nhat trang thai user.", exception);
         }
     }
 

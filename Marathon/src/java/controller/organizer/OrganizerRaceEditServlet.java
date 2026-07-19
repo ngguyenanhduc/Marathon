@@ -291,8 +291,8 @@ public class OrganizerRaceEditServlet
             return "Hạn đăng ký phải lớn hơn thời điểm hiện tại.";
         }
 
-        if (registrationDeadline.isAfter(startDate)) {
-            return "Hạn đăng ký không được sau ngày bắt đầu.";
+        if (registrationDeadline.isAfter(endDate)) {
+            return "Hạn đăng ký không được sau ngày kết thúc.";
         }
 
         return null;

@@ -94,6 +94,8 @@
 
 <body>
 
+<jsp:include page="/views/organizer/organizer-nav.jsp" />
+
 <div class="container">
 
     <h1>Thêm cự ly</h1>

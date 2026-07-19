@@ -3,6 +3,8 @@ package dal;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 import model.OrganizerRequest;
 
 /**
@@ -27,14 +29,14 @@ public class OrganizerRequestDAO extends DBContext {
                 approverId,
                 approver.fullName AS approverName,
                 reason,
-                request.status,
+                orgRequest.status,
                 requestDate,
                 approvedDate
-            FROM OrganizerRequest request
+            FROM OrganizerRequest orgRequest
             JOIN Users requester
-                ON request.requesterId = requester.userId
+                ON orgRequest.requesterId = requester.userId
             LEFT JOIN Users approver
-                ON request.approverId = approver.userId
+                ON orgRequest.approverId = approver.userId
             WHERE requesterId = ?
             ORDER BY requestDate DESC
             """;
@@ -102,6 +104,122 @@ public class OrganizerRequestDAO extends DBContext {
         } catch (SQLException exception) {
             throw new RuntimeException(
                     "Khong the gui yeu cau Organizer.", exception);
+        }
+    }
+
+    //cac method Admin do anhdu bo sung
+
+    //lay cac yeu cau Organizer dang cho Admin duyet
+    public List<OrganizerRequest> getPendingRequestsForAdmin() {
+        List<OrganizerRequest> requests = new ArrayList<>();
+        String sql = """
+            SELECT
+                orgRequest.requestId,
+                orgRequest.requesterId,
+                requester.fullName AS requesterName,
+                requester.email AS requesterEmail,
+                orgRequest.approverId,
+                approver.fullName AS approverName,
+                orgRequest.reason,
+                orgRequest.status,
+                orgRequest.requestDate,
+                orgRequest.approvedDate
+            FROM OrganizerRequest orgRequest
+            JOIN Users requester
+                ON orgRequest.requesterId = requester.userId
+            LEFT JOIN Users approver
+                ON orgRequest.approverId = approver.userId
+            WHERE orgRequest.status = 'PENDING'
+            ORDER BY orgRequest.requestDate ASC
+            """;
+
+        try (PreparedStatement statement = connection.prepareStatement(sql);
+                ResultSet resultSet = statement.executeQuery()) {
+            while (resultSet.next()) {
+                requests.add(mapRequest(resultSet));
+            }
+        } catch (SQLException exception) {
+            throw new RuntimeException(
+                    "Khong the lay yeu cau Organizer cho Admin.", exception);
+        }
+
+        return requests;
+    }
+
+    //duyet yeu cau va nang quyen Runner thanh Organizer neu duoc chap nhan
+    public boolean reviewRequestByAdmin(int requestId,
+            int adminId,
+            String status) {
+        String updateRequestSql = """
+            UPDATE OrganizerRequest
+            SET approverId = ?,
+                status = ?,
+                approvedDate = GETDATE()
+            WHERE requestId = ?
+              AND status = 'PENDING'
+              AND ? IN ('APPROVED', 'REJECTED')
+            """;
+
+        String updateRoleSql = """
+            UPDATE Users
+            SET roleId = (
+                SELECT roleId
+                FROM Roles
+                WHERE roleName = 'ORGANIZER'
+            )
+            WHERE userId = (
+                SELECT requesterId
+                FROM OrganizerRequest
+                WHERE requestId = ?
+            )
+            """;
+
+        try {
+            connection.setAutoCommit(false);
+
+            try (PreparedStatement statement =
+                    connection.prepareStatement(updateRequestSql)) {
+                statement.setInt(1, adminId);
+                statement.setString(2, status);
+                statement.setInt(3, requestId);
+                statement.setString(4, status);
+
+                if (statement.executeUpdate() == 0) {
+                    connection.rollback();
+                    return false;
+                }
+            }
+
+            if ("APPROVED".equals(status)) {
+                try (PreparedStatement statement =
+                        connection.prepareStatement(updateRoleSql)) {
+                    statement.setInt(1, requestId);
+
+                    if (statement.executeUpdate() == 0) {
+                        connection.rollback();
+                        return false;
+                    }
+                }
+            }
+
+            connection.commit();
+            return true;
+        } catch (SQLException exception) {
+            try {
+                connection.rollback();
+            } catch (SQLException rollbackException) {
+                exception.addSuppressed(rollbackException);
+            }
+
+            throw new RuntimeException(
+                    "Khong the duyet yeu cau Organizer.", exception);
+        } finally {
+            try {
+                connection.setAutoCommit(true);
+            } catch (SQLException exception) {
+                throw new RuntimeException(
+                        "Khong the khoi phuc transaction.", exception);
+            }
         }
     }
 

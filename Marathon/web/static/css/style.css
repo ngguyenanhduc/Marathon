@@ -200,6 +200,14 @@ textarea.form-control {
     color: var(--text);
 }
 
+.button-danger {
+    background: var(--danger);
+}
+
+.button-danger:hover {
+    background: #a61e1e;
+}
+
 .button[disabled] {
     background: #a8b0b8;
     cursor: not-allowed;
@@ -229,6 +237,31 @@ textarea.form-control {
     grid-template-columns: minmax(220px, 1fr) auto;
     gap: 10px;
     margin-bottom: 24px;
+}
+
+.admin-tabs {
+    margin-bottom: 18px;
+}
+
+.admin-filter-form {
+    display: grid;
+    grid-template-columns: minmax(220px, 1fr) 170px 170px auto;
+    gap: 10px;
+}
+
+.admin-table {
+    margin-top: 18px;
+}
+
+.inline-form {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.compact-control {
+    width: 150px;
 }
 
 .race-grid {
@@ -280,6 +313,24 @@ textarea.form-control {
     color: #1864ab;
     font-size: 12px;
     font-weight: 700;
+}
+
+.status-ACTIVE,
+.status-APPROVED {
+    background: #ebfbee;
+    color: var(--success);
+}
+
+.status-INACTIVE,
+.status-PENDING {
+    background: #fff4e6;
+    color: var(--warning);
+}
+
+.status-BANNED,
+.status-REJECTED {
+    background: #fff5f5;
+    color: var(--danger);
 }
 
 .distance-list {
@@ -379,6 +430,10 @@ textarea.form-control {
     }
 
     .search-form {
+        grid-template-columns: 1fr;
+    }
+
+    .admin-filter-form {
         grid-template-columns: 1fr;
     }
 }

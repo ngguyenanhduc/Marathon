@@ -8,9 +8,21 @@
         <filter-name>RunnerAuthorizationFilter</filter-name>
         <filter-class>filter.RunnerAuthorizationFilter</filter-class>
     </filter>
+    <filter>
+        <filter-name>AdminAuthorizationFilter</filter-name>
+        <filter-class>filter.AdminAuthorizationFilter</filter-class>
+    </filter>
     <filter-mapping>
         <filter-name>RunnerAuthorizationFilter</filter-name>
         <url-pattern>/runner/*</url-pattern>
+    </filter-mapping>
+    <filter-mapping>
+        <filter-name>AdminAuthorizationFilter</filter-name>
+        <url-pattern>/admin/*</url-pattern>
+    </filter-mapping>
+    <filter-mapping>
+        <filter-name>AdminAuthorizationFilter</filter-name>
+        <url-pattern>/views/admin/*</url-pattern>
     </filter-mapping>
 
     <servlet>
@@ -53,6 +65,22 @@
         <servlet-name>RunnerOrganizerRequestServlet</servlet-name>
         <servlet-class>controller.runner.RunnerOrganizerRequestServlet</servlet-class>
     </servlet>
+    <servlet>
+        <servlet-name>AdminUserServlet</servlet-name>
+        <servlet-class>controller.admin.AdminUserServlet</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>AdminRaceRequestServlet</servlet-name>
+        <servlet-class>controller.admin.AdminRaceRequestServlet</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>AdminOrganizerRequestServlet</servlet-name>
+        <servlet-class>controller.admin.AdminOrganizerRequestServlet</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>AdminInputResultServlet</servlet-name>
+        <servlet-class>controller.admin.AdminInputResultServlet</servlet-class>
+    </servlet>
 
     <servlet-mapping>
         <servlet-name>TestDB</servlet-name>
@@ -93,6 +121,22 @@
     <servlet-mapping>
         <servlet-name>RunnerOrganizerRequestServlet</servlet-name>
         <url-pattern>/runner/organizer-request</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>AdminUserServlet</servlet-name>
+        <url-pattern>/admin/users</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>AdminRaceRequestServlet</servlet-name>
+        <url-pattern>/admin/race-requests</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>AdminOrganizerRequestServlet</servlet-name>
+        <url-pattern>/admin/organizer-requests</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>AdminInputResultServlet</servlet-name>
+        <url-pattern>/admin/input-result</url-pattern>
     </servlet-mapping>
 
     <welcome-file-list>

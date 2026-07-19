@@ -216,6 +216,8 @@
 
 <body>
 
+<jsp:include page="/views/organizer/organizer-nav.jsp" />
+
 <div class="container">
 
     <div class="header">

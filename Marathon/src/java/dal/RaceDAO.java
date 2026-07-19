@@ -318,6 +318,94 @@ public class RaceDAO extends DBContext {
         }
     }
 
+    //cac method Admin do anhdu bo sung
+
+    //lay cac giai dang cho Admin duyet
+    public List<Race> getPendingRacesForAdmin() {
+        List<Race> races = new ArrayList<>();
+        String sql = """
+            SELECT
+                r.raceId,
+                r.createdByUserId,
+                creator.fullName AS creatorName,
+                r.approvedByUserId,
+                r.raceName,
+                r.description,
+                r.createdDate,
+                r.approvedDate,
+                r.startDate,
+                r.endDate,
+                r.registrationDeadline,
+                r.location,
+                r.status,
+                COUNT(DISTINCT d.distanceId) AS distanceCount,
+                COUNT(DISTINCT reg.registrationId) AS registrationCount
+            FROM Race r
+            JOIN Users creator
+                ON r.createdByUserId = creator.userId
+            LEFT JOIN DistanceKM d
+                ON r.raceId = d.raceId
+            LEFT JOIN Registration reg
+                ON d.distanceId = reg.distanceId
+            WHERE r.status = 'PENDING'
+            GROUP BY
+                r.raceId,
+                r.createdByUserId,
+                creator.fullName,
+                r.approvedByUserId,
+                r.raceName,
+                r.description,
+                r.createdDate,
+                r.approvedDate,
+                r.startDate,
+                r.endDate,
+                r.registrationDeadline,
+                r.location,
+                r.status
+            ORDER BY r.createdDate ASC
+            """;
+
+        try (PreparedStatement statement = connection.prepareStatement(sql);
+                ResultSet resultSet = statement.executeQuery()) {
+            while (resultSet.next()) {
+                Race race = mapRace(resultSet);
+                race.setCreatorName(resultSet.getString("creatorName"));
+                races.add(race);
+            }
+        } catch (SQLException exception) {
+            throw new RuntimeException(
+                    "Khong the lay danh sach giai cho Admin.", exception);
+        }
+
+        return races;
+    }
+
+    //duyet hoac tu choi giai dang o trang thai PENDING
+    public boolean reviewRaceByAdmin(int raceId,
+            int adminId,
+            String status) {
+        String sql = """
+            UPDATE Race
+            SET approvedByUserId = ?,
+                status = ?,
+                approvedDate = GETDATE()
+            WHERE raceId = ?
+              AND status = 'PENDING'
+              AND ? IN ('APPROVED', 'REJECTED')
+            """;
+
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, adminId);
+            statement.setString(2, status);
+            statement.setInt(3, raceId);
+            statement.setString(4, status);
+            return statement.executeUpdate() > 0;
+        } catch (SQLException exception) {
+            throw new RuntimeException(
+                    "Khong the duyet giai chay.", exception);
+        }
+    }
+
     private Race mapRace(ResultSet resultSet)
             throws SQLException {
 

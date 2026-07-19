@@ -112,6 +112,8 @@
 
 <body>
 
+<jsp:include page="/views/organizer/organizer-nav.jsp" />
+
 <div class="container">
 
     <h1>Tạo giải chạy mới</h1>

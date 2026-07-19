@@ -110,6 +110,8 @@
 
 <body>
 
+<jsp:include page="/views/organizer/organizer-nav.jsp" />
+
 <div class="container">
 
     <h1>Sửa cự ly</h1>

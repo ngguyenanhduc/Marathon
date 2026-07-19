@@ -67,27 +67,18 @@ public class ApproveOrganizerController extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
     throws ServletException, IOException {
-        // Bước 1: Lấy các tham số truyền từ Form JSP lên
-        int requestId = Integer.parseInt(request.getParameter("requestId"));
-        String action = request.getParameter("action"); // Sẽ nhận giá trị "APPROVED" hoặc "REJECTED"
-        
-        // Bước 2: Xác định Admin nào đang thực hiện phê duyệt
-        // Trong thực tế, bạn sẽ lấy từ Session sau khi Admin đăng nhập:
-        // int adminId = ((User) request.getSession().getAttribute("account")).getUserId();
-        int adminId = 1; // Tạm thời để cứng ID = 1 để test nếu chưa làm chức năng Login
+     String userId = request.getParameter("userId");
+        String action = request.getParameter("action");
 
-        // Bước 3: Gọi lớp DAL để xử lý cập nhật Database
         UserDAL userDAL = new UserDAL();
-        boolean isSuccess = userDAL.handleOrganizerRequest(requestId, adminId, action);
-        
-        // Bước 4: Điều hướng Admin quay trở lại trang danh sách yêu cầu chờ duyệt
-        if (isSuccess) {
-            // Nếu thành công, chuyển hướng kèm thông báo thành công (nếu muốn)
-            response.sendRedirect(request.getContextPath() + "/admin/requests.jsp?message=success");
-        } else {
-            // Nếu lỗi (ví dụ lỗi SQL), chuyển hướng kèm thông báo lỗi
-            response.sendRedirect(request.getContextPath() + "/admin/requests.jsp?message=error");
+        if ("approve".equals(action)) {
+            userDAL.updateUserRoleAndStatus(userId, "Organizer", "Active");
+        } else if ("reject".equals(action)) {
+            userDAL.updateUserStatus(userId, "Rejected");
         }
+        
+        // Điều hướng ngược lại trang danh sách yêu cầu sau khi xử lý xong
+        response.sendRedirect("requests.jsp");
     }
 
     /** 

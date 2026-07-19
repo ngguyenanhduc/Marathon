@@ -69,24 +69,16 @@ public class ManageUserController extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
     throws ServletException, IOException {
-       // Bước 1: Đọc tham số từ giao diện gửi về
-        int raceId = Integer.parseInt(request.getParameter("raceId"));
-        String action = request.getParameter("action"); // Nhận giá trị "APPROVED" hoặc "REJECTED"
-        
-        // Giả định ID của Admin phê duyệt lấy từ session (tạm thời để 1)
-        int adminId = 1; 
-        
-        // Bước 2: Gọi RaceDAL để cập nhật trạng thái giải chạy và người duyệt
-        RaceDAL raceDAL = new RaceDAL();
-        boolean isSuccess = raceDAL.reviewRace(raceId, adminId, action);
-        
-        // Bước 3: Quay trở lại trang quản lý giải chạy của Admin
-        if (isSuccess) {
-            response.sendRedirect(request.getContextPath() + "/admin/races.jsp?status=" + action);
-        } else {
-            response.sendRedirect(request.getContextPath() + "/admin/races.jsp?message=failed");
-        }
+       String userId = request.getParameter("userId");
+        String status = request.getParameter("status"); // Nhận giá trị: Active, Inactive, Banned
+
+        UserDAL userDAL = new UserDAL();
+        userDAL.updateUserStatus(userId, status);
+
+        response.sendRedirect("users.jsp");
     }
+    
+
 
     /** 
      * Returns a short description of the servlet.

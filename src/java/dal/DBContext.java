@@ -11,16 +11,16 @@ import java.sql.SQLException;
  * @author anhdu
  */
 public class DBContext {
-    protected Connection connection;
+protected Connection connection;
 
     public DBContext() {
         try {
-            // Cấu hình kết nối SQL Server của bạn
-            String url = "jdbc:sqlserver://localhost:1433;databaseName=MarathonDB;encrypt=true;trustServerCertificate=true;";
-            String user = "sa";
-            String pass = "123"; // Đổi password của bạn
+            // Thay đổi URL, Username, Password phù hợp với DB của bạn
+            String url = "jdbc:sqlserver://127.0.0.1:1433;databaseName=MarathonDB;encrypt=true;trustServerCertificate=true;";
+            String username = "sa";
+            String password = "123";
             Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
-            connection = DriverManager.getConnection(url, user, pass);
+            connection = DriverManager.getConnection(url, username, password);
         } catch (ClassNotFoundException | SQLException ex) {
             ex.printStackTrace();
         }

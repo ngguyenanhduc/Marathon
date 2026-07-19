@@ -4,10 +4,7 @@
  */
 
 package controller;
-
-
 import dal.RaceDAL;
-import dal.UserDAL;
 import java.io.IOException;
 import java.io.PrintWriter;
 import jakarta.servlet.ServletException;
@@ -19,7 +16,7 @@ import jakarta.servlet.http.HttpServletResponse;
  *
  * @author anhdu
  */
-public class ApproveRaceController extends HttpServlet {
+public class InputResultController extends HttpServlet {
    
     /** 
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code> methods.
@@ -36,10 +33,10 @@ public class ApproveRaceController extends HttpServlet {
             out.println("<!DOCTYPE html>");
             out.println("<html>");
             out.println("<head>");
-            out.println("<title>Servlet ApproveRaceController</title>");  
+            out.println("<title>Servlet InputResultController</title>");  
             out.println("</head>");
             out.println("<body>");
-            out.println("<h1>Servlet ApproveRaceController at " + request.getContextPath () + "</h1>");
+            out.println("<h1>Servlet InputResultController at " + request.getContextPath () + "</h1>");
             out.println("</body>");
             out.println("</html>");
         }
@@ -56,7 +53,7 @@ public class ApproveRaceController extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
     throws ServletException, IOException {
-        processRequest(request, response);
+        request.getRequestDispatcher("/input-results.jsp").forward(request, response);
     } 
 
     /** 
@@ -69,18 +66,24 @@ public class ApproveRaceController extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
     throws ServletException, IOException {
-       String userId = request.getParameter("userId");
-        String action = request.getParameter("action");
+        // Hứng tham số mới từ form JSP
+    String registrationId = request.getParameter("registrationId");
+    String finishTime = request.getParameter("finishTime");
 
-        UserDAL userDAL = new UserDAL();
-        if ("approve".equals(action)) {
-            userDAL.updateUserRoleAndStatus(userId, "Organizer", "Active");
-        } else if ("reject".equals(action)) {
-            userDAL.updateUserStatus(userId, "Rejected");
-        }
-        
-        // Điều hướng ngược lại trang danh sách yêu cầu sau khi xử lý xong
-        response.sendRedirect("requests.jsp");
+    RaceDAL raceDAL = new RaceDAL();
+    
+    // Gọi hàm chèn dữ liệu đã sửa đổi
+    boolean isInserted = raceDAL.insertRaceResult(registrationId, finishTime);
+    
+    if (isInserted) {
+        // Tạm thời comment hàm tính ranking lại để test insert trước, hoặc sửa tham số truyền vào nếu cần
+        // raceDAL.calculateRankings(...); 
+        request.setAttribute("message", "Nhập kết quả thành công!");
+    } else {
+        request.setAttribute("message", "Đã xảy ra lỗi, vui lòng kiểm tra lại mã đăng ký.");
+    }
+
+    request.getRequestDispatcher("/input-results.jsp").forward(request, response);
     }
 
     /** 

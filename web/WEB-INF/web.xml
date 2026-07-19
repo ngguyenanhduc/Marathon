@@ -12,6 +12,10 @@
         <servlet-name>ManageUserController</servlet-name>
         <servlet-class>controller.ManageUserController</servlet-class>
     </servlet>
+    <servlet>
+        <servlet-name>InputResultController</servlet-name>
+        <servlet-class>controller.InputResultController</servlet-class>
+    </servlet>
     <servlet-mapping>
         <servlet-name>ApproveOrganizerController</servlet-name>
         <url-pattern>/ApproveOrganizerController</url-pattern>
@@ -23,5 +27,9 @@
     <servlet-mapping>
         <servlet-name>ManageUserController</servlet-name>
         <url-pattern>/ManageUserController</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>InputResultController</servlet-name>
+        <url-pattern>/admin/input-result</url-pattern>
     </servlet-mapping>
 </web-app>

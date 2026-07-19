@@ -16,7 +16,7 @@ public class User {
 
     public User() {
     }
-
+    
     public boolean isAdmin() {
         return "ADMIN".equalsIgnoreCase(roleName);
     }

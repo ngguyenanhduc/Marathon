@@ -3,13 +3,17 @@ package model;
 import java.math.BigDecimal;
 
 public class DistanceKM {
+
     private int distanceId;
     private int raceId;
+
     private String raceName;
     private String distanceName;
     private BigDecimal distanceKm;
+    private String raceStatus;
+
     private int maxParticipant;
-    private BigDecimal registrationFee;
+
     private int approvedRegistrationCount;
     private int pendingRegistrationCount;
 
@@ -56,6 +60,14 @@ public class DistanceKM {
         this.distanceKm = distanceKm;
     }
 
+    public String getRaceStatus() {
+        return raceStatus;
+    }
+
+    public void setRaceStatus(String raceStatus) {
+        this.raceStatus = raceStatus;
+    }
+
     public int getMaxParticipant() {
         return maxParticipant;
     }
@@ -64,27 +76,32 @@ public class DistanceKM {
         this.maxParticipant = maxParticipant;
     }
 
-    public BigDecimal getRegistrationFee() {
-        return registrationFee;
-    }
-
-    public void setRegistrationFee(BigDecimal registrationFee) {
-        this.registrationFee = registrationFee;
-    }
-
+    
+    
+    
+    
     public int getApprovedRegistrationCount() {
         return approvedRegistrationCount;
     }
 
-    public void setApprovedRegistrationCount(int approvedRegistrationCount) {
-        this.approvedRegistrationCount = approvedRegistrationCount;
+    public void setApprovedRegistrationCount(
+            int approvedRegistrationCount) {
+        this.approvedRegistrationCount =
+                approvedRegistrationCount;
     }
 
     public int getPendingRegistrationCount() {
         return pendingRegistrationCount;
     }
 
-    public void setPendingRegistrationCount(int pendingRegistrationCount) {
-        this.pendingRegistrationCount = pendingRegistrationCount;
+    public void setPendingRegistrationCount(
+            int pendingRegistrationCount) {
+        this.pendingRegistrationCount =
+                pendingRegistrationCount;
+    }
+
+    public boolean isRaceEditable() {
+        return "PENDING".equalsIgnoreCase(raceStatus)
+                || "REJECTED".equalsIgnoreCase(raceStatus);
     }
 }

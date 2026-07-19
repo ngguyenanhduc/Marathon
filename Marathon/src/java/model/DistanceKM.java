@@ -10,6 +10,8 @@ public class DistanceKM {
     private String raceName;
     private String distanceName;
     private BigDecimal distanceKm;
+    //phi dang ky duoc hien thi tren trang chi tiet giai
+    private BigDecimal registrationFee;
     private String raceStatus;
 
     private int maxParticipant;
@@ -58,6 +60,14 @@ public class DistanceKM {
 
     public void setDistanceKm(BigDecimal distanceKm) {
         this.distanceKm = distanceKm;
+    }
+
+    public BigDecimal getRegistrationFee() {
+        return registrationFee;
+    }
+
+    public void setRegistrationFee(BigDecimal registrationFee) {
+        this.registrationFee = registrationFee;
     }
 
     public String getRaceStatus() {

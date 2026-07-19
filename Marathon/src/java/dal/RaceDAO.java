@@ -20,6 +20,143 @@ public class RaceDAO extends DBContext {
 
     private int raceId;
 
+    //cac method Public Race do PhucNTHE173021 bo sung
+
+    //lay cac giai cong khai va loc theo ten hoac dia diem
+    public List<Race> getPublicRaces(String keyword) {
+        List<Race> races = new ArrayList<>();
+        String searchValue = keyword == null ? "" : keyword.trim();
+        String likeValue = "%" + searchValue + "%";
+
+        String sql = """
+            SELECT
+                r.raceId,
+                r.createdByUserId,
+                creator.fullName AS creatorName,
+                r.approvedByUserId,
+                r.raceName,
+                r.description,
+                r.createdDate,
+                r.approvedDate,
+                r.startDate,
+                r.endDate,
+                r.registrationDeadline,
+                r.location,
+                r.status,
+                COUNT(DISTINCT d.distanceId) AS distanceCount,
+                COUNT(DISTINCT reg.registrationId) AS registrationCount
+            FROM Race r
+            JOIN Users creator
+                ON r.createdByUserId = creator.userId
+            LEFT JOIN DistanceKM d
+                ON r.raceId = d.raceId
+            LEFT JOIN Registration reg
+                ON d.distanceId = reg.distanceId
+            WHERE r.status NOT IN ('PENDING', 'REJECTED')
+              AND (? = ''
+                   OR r.raceName LIKE ?
+                   OR r.location LIKE ?)
+            GROUP BY
+                r.raceId,
+                r.createdByUserId,
+                creator.fullName,
+                r.approvedByUserId,
+                r.raceName,
+                r.description,
+                r.createdDate,
+                r.approvedDate,
+                r.startDate,
+                r.endDate,
+                r.registrationDeadline,
+                r.location,
+                r.status
+            ORDER BY
+                CASE WHEN r.startDate >= GETDATE() THEN 0 ELSE 1 END,
+                r.startDate ASC
+            """;
+
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, searchValue);
+            statement.setString(2, likeValue);
+            statement.setString(3, likeValue);
+
+            try (ResultSet resultSet = statement.executeQuery()) {
+                while (resultSet.next()) {
+                    Race race = mapRace(resultSet);
+                    race.setCreatorName(resultSet.getString("creatorName"));
+                    races.add(race);
+                }
+            }
+        } catch (SQLException exception) {
+            throw new RuntimeException(
+                    "Khong the lay danh sach giai cong khai.", exception);
+        }
+
+        return races;
+    }
+
+    //lay chi tiet mot giai da duoc cong khai
+    public Race getPublicRaceById(int raceId) {
+        String sql = """
+            SELECT
+                r.raceId,
+                r.createdByUserId,
+                creator.fullName AS creatorName,
+                r.approvedByUserId,
+                r.raceName,
+                r.description,
+                r.createdDate,
+                r.approvedDate,
+                r.startDate,
+                r.endDate,
+                r.registrationDeadline,
+                r.location,
+                r.status,
+                COUNT(DISTINCT d.distanceId) AS distanceCount,
+                COUNT(DISTINCT reg.registrationId) AS registrationCount
+            FROM Race r
+            JOIN Users creator
+                ON r.createdByUserId = creator.userId
+            LEFT JOIN DistanceKM d
+                ON r.raceId = d.raceId
+            LEFT JOIN Registration reg
+                ON d.distanceId = reg.distanceId
+            WHERE r.raceId = ?
+              AND r.status NOT IN ('PENDING', 'REJECTED')
+            GROUP BY
+                r.raceId,
+                r.createdByUserId,
+                creator.fullName,
+                r.approvedByUserId,
+                r.raceName,
+                r.description,
+                r.createdDate,
+                r.approvedDate,
+                r.startDate,
+                r.endDate,
+                r.registrationDeadline,
+                r.location,
+                r.status
+            """;
+
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, raceId);
+
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    Race race = mapRace(resultSet);
+                    race.setCreatorName(resultSet.getString("creatorName"));
+                    return race;
+                }
+            }
+        } catch (SQLException exception) {
+            throw new RuntimeException(
+                    "Khong the lay chi tiet giai cong khai.", exception);
+        }
+
+        return null;
+    }
+
     public List<Race> getRacesByOrganizerId(int organizerId) {
         List<Race> races = new ArrayList<>();
 
